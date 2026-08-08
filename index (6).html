@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e1f22">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Still">
+<title>Still</title>
+<style>
+  :root{
+    --bg:#0e1f22;
+    --bg2:#13282c;
+    --surface:rgba(255,255,255,0.045);
+    --surface-2:rgba(255,255,255,0.08);
+    --line:rgba(255,255,255,0.09);
+    --ink:#e7ede9;
+    --muted:#8ea8a2;
+    --faint:#5f7d78;
+    --orb:#74c3b3;
+    --orb-2:#4f9d90;
+    --orb-glow:rgba(116,195,179,0.35);
+    --sand:#d9bd90;
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:var(--sans);
+    background:radial-gradient(120% 100% at 50% -10%,var(--bg2),var(--bg) 60%);
+    color:var(--ink);
+    min-height:100%;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;z-index:1;}
+
+  /* ---------- ambient floating glows ---------- */
+  .ambient{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .mote{position:absolute;border-radius:50%;filter:blur(42px);opacity:.14;will-change:transform;}
+  .mote.a{width:220px;height:220px;left:-40px;top:12%;background:var(--orb);animation:drift1 34s ease-in-out infinite;}
+  .mote.b{width:160px;height:160px;right:-30px;top:34%;background:var(--orb-2);opacity:.12;animation:drift2 41s ease-in-out infinite;}
+  .mote.c{width:120px;height:120px;left:24%;bottom:16%;background:var(--sand);opacity:.07;animation:drift3 47s ease-in-out infinite;}
+  .mote.d{width:90px;height:90px;right:22%;bottom:28%;background:var(--orb);opacity:.10;animation:drift1 29s ease-in-out infinite reverse;}
+  .mote.e{width:70px;height:70px;left:50%;top:8%;background:var(--sand);opacity:.06;animation:drift2 38s ease-in-out infinite;}
+  @keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(26px,-40px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,32px);}}
+  @keyframes drift3{0%,100%{transform:translate(0,0);}50%{transform:translate(22px,-28px);}}
+  .view{flex:1;display:none;flex-direction:column;padding:28px 22px 34px;animation:fade .5s ease;}
+  .view.active{display:flex;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* ---------- Home ---------- */
+  .brand{margin-top:6px;}
+  .brand h1{font-family:var(--serif);font-weight:500;font-size:34px;letter-spacing:.5px;margin:0;}
+  .brand p{color:var(--muted);margin:6px 0 0;font-size:15px;}
+  .doors{display:flex;flex-direction:column;gap:16px;width:100%;}
+  .homemid{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0;}
+  .door{
+    border:1px solid var(--line);border-radius:22px;padding:26px 24px;text-align:left;
+    background:var(--surface);color:var(--ink);font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;gap:4px;transition:transform .15s ease,background .2s ease;
+  }
+  .door:active{transform:scale(.985);}
+  .door .t{font-family:var(--serif);font-size:23px;}
+  .door .s{color:var(--muted);font-size:14px;}
+  .door.primary{
+    background:linear-gradient(160deg,rgba(116,195,179,.16),rgba(79,157,144,.05));
+    border-color:rgba(116,195,179,.28);
+  }
+  .door.primary .t{color:#bfe8de;}
+  .homefoot{margin-top:22px;display:flex;justify-content:space-between;align-items:center;}
+  .linkbtn{background:none;border:none;color:var(--faint);font-family:inherit;font-size:13px;cursor:pointer;padding:6px 0;}
+  .linkbtn:active{color:var(--muted);}
+
+  /* ---------- shared header ---------- */
+  .top{display:flex;align-items:center;gap:14px;margin-bottom:8px;min-height:34px;}
+  .back{background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:4px 6px;margin-left:-6px;font-family:inherit;}
+  .top h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0;flex:1;}
+
+  /* ---------- Breathe ---------- */
+  .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:2px 0 6px;}
+  .pill{
+    border:1px solid var(--line);background:transparent;color:var(--muted);
+    border-radius:999px;padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;transition:.2s;
+  }
+  .pill.on{background:var(--surface-2);color:var(--ink);border-color:rgba(116,195,179,.35);}
+  .pill .star{color:var(--sand);}
+  .favrow{text-align:center;min-height:22px;margin:2px 0 4px;}
+  .favbtn{background:none;border:none;font-family:inherit;font-size:13px;color:var(--faint);cursor:pointer;padding:4px 8px;transition:color .2s;}
+  .favbtn:active{color:var(--muted);}
+  .favbtn.isfav{color:var(--sand);}
+  .orbwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;position:relative;}
+  .stage{position:relative;width:250px;height:250px;display:flex;align-items:center;justify-content:center;}
+  .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(116,195,179,.16);transform:scale(1);}
+  .orb{
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle at 38% 34%,var(--orb),var(--orb-2) 72%);
+    box-shadow:0 0 60px 6px var(--orb-glow),inset 0 0 40px rgba(255,255,255,.12);
+    transform:scale(.55);
+    transition:transform 4s cubic-bezier(.37,0,.63,1);
+  }
+  .cue{position:absolute;font-family:var(--serif);font-size:24px;color:#0e2723;letter-spacing:.3px;pointer-events:none;text-shadow:0 1px 6px rgba(255,255,255,.25);}
+  .subcue{color:var(--muted);font-size:14px;min-height:20px;text-align:center;letter-spacing:.4px;}
+  .bigbtn{
+    border:none;border-radius:16px;padding:17px;font-size:17px;font-family:var(--serif);cursor:pointer;width:100%;
+    background:var(--orb);color:#08221d;transition:transform .15s ease,opacity .2s;
+  }
+  .bigbtn:active{transform:scale(.985);}
+  .bigbtn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .stack{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+
+  /* ---------- Grounding ---------- */
+  .ground{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;cursor:pointer;}
+  .gcount{font-family:var(--serif);font-size:88px;line-height:1;color:var(--orb);}
+  .gtext{font-family:var(--serif);font-size:26px;max-width:16ch;line-height:1.35;}
+  .ghint{color:var(--faint);font-size:13px;letter-spacing:.5px;}
+
+  /* ---------- Forms / check-in ---------- */
+  label.fld{display:block;color:var(--muted);font-size:14px;margin:18px 0 8px;}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;
+    background:linear-gradient(90deg,var(--orb),var(--sand));outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border:none;border-radius:50%;background:#fff;cursor:pointer;}
+  .scalerow{display:flex;justify-content:space-between;color:var(--faint);font-size:12px;margin-top:8px;}
+  .levelnum{font-family:var(--serif);font-size:52px;text-align:center;margin:6px 0 2px;}
+  .levelword{text-align:center;color:var(--muted);font-size:15px;min-height:20px;}
+  textarea,input[type=text]{
+    width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    color:var(--ink);font-family:inherit;font-size:16px;padding:14px;resize:vertical;
+  }
+  textarea:focus,input:focus{outline:none;border-color:rgba(116,195,179,.4);}
+
+  /* ---------- Thought record ---------- */
+  .step .q{font-family:var(--serif);font-size:22px;line-height:1.35;margin:8px 0 4px;}
+  .step .hint{color:var(--faint);font-size:13px;margin-bottom:12px;}
+  .progress{display:flex;gap:6px;margin:4px 0 18px;}
+  .progress span{flex:1;height:4px;border-radius:2px;background:var(--line);}
+  .progress span.done{background:var(--orb);}
+
+  /* ---------- History ---------- */
+  .empty{color:var(--muted);text-align:center;margin:auto;font-size:15px;line-height:1.5;max-width:24ch;}
+  .chartcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 14px 10px;margin-bottom:18px;}
+  .chartcard .cl{color:var(--muted);font-size:13px;margin-bottom:8px;}
+  .entry{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px;background:var(--surface);}
+  .entry .meta{display:flex;justify-content:space-between;align-items:baseline;}
+  .entry .when{color:var(--faint);font-size:12px;}
+  .entry .lvl{font-family:var(--serif);font-size:18px;}
+  .entry .note{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.45;white-space:pre-wrap;}
+  .entry .tag{color:var(--orb);font-size:12px;letter-spacing:.5px;text-transform:uppercase;}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{flex:1;text-align:center;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:12px;padding:10px;font-family:inherit;font-size:14px;cursor:pointer;}
+  .tab.on{background:var(--surface-2);color:var(--ink);}
+
+  /* ---------- Crisis ---------- */
+  .sheet{position:fixed;inset:0;background:rgba(6,16,17,.72);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:20;}
+  .sheet.open{display:flex;animation:fade .25s ease;}
+  .sheetcard{background:var(--bg2);border:1px solid var(--line);border-top-left-radius:26px;border-top-right-radius:26px;
+    width:100%;max-width:520px;padding:26px 24px 34px;}
+  .sheetcard h3{font-family:var(--serif);font-weight:500;font-size:22px;margin:0 0 10px;}
+  .sheetcard p{color:var(--muted);font-size:15px;line-height:1.55;margin:0 0 14px;}
+  .sheetcard b{color:var(--ink);}
+  .center{text-align:center;}
+  .reassure{font-family:var(--serif);font-size:22px;text-align:center;line-height:1.4;max-width:18ch;margin:auto;}
+
+  @media (prefers-reduced-motion: reduce){
+    .ring{display:none;}
+    .view{animation:none;}
+    .mote{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+  <div class="mote a"></div><div class="mote b"></div><div class="mote c"></div>
+  <div class="mote d"></div><div class="mote e"></div>
+</div>
+<div class="app">
+
+  <!-- HOME -->
+  <section id="home" class="view active">
+    <div class="brand">
+      <h1>Still</h1>
+      <p id="greeting">A quiet place to steady yourself.</p>
+    </div>
+    <div class="homemid">
+      <div class="doors">
+        <button class="door primary" onclick="go('breathe')">
+          <span class="t">I'm panicking</span>
+          <span class="s">Breathe with me · grounding</span>
+        </button>
+        <button class="door" onclick="go('checkin')">
+          <span class="t">Check in</span>
+          <span class="s">Log how you feel · work through a thought</span>
+        </button>
+      </div>
+    </div>
+    <div class="homefoot">
+      <button class="linkbtn" onclick="go('history')">See history</button>
+      <button class="linkbtn" onclick="openCrisis()">In crisis?</button>
+    </div>
+  </section>
+
+  <!-- BREATHE -->
+  <section id="breathe" class="view">
+    <div class="top">
+      <button class="back" onclick="stopBreath();go('home')">‹</button>
+      <h2>Breathe</h2>
+    </div>
+    <div class="pills" id="pills"></div>
+    <div class="favrow" id="favRow"></div>
+    <div class="orbwrap">
+      <div class="stage">
+        <div class="ring" id="ring"></div>
+        <div class="orb" id="orb"></div>
+        <div class="cue" id="cue">Ready</div>
+      </div>
+      <div class="subcue" id="subcue">A slow breath out is what calms you.</div>
+    </div>
+    <div class="stack">
+      <button class="bigbtn" id="breathToggle" onclick="toggleBreath()">Begin</button>
+      <button class="bigbtn ghost" onclick="stopBreath();go('ground')">Try grounding instead</button>
+    </div>
+  </section>
+
+  <!-- GROUND -->
+  <section id="ground" class="view">
+    <div class="top">
+      <button class="back" onclick="go('breathe')">‹</button>
+      <h2>Grounding</h2>
+    </div>
+    <div class="ground" id="groundStage" onclick="nextGround()">
+      <div class="gcount" id="gcount">5</div>
+      <div class="gtext" id="gtext">things you can see</div>
+      <div class="ghint" id="ghint">tap when you've found them</div>
+    </div>
+  </section>
+
+  <!-- CHECK IN (chooser) -->
+  <section id="checkin" class="view">
+    <div class="top">
+      <button class="back" onclick="go('home')">‹</button>
+      <h2>Check in</h2>
+    </div>
+    <div class="doors" style="margin-top:14px;flex:none;">
+      <button class="door" onclick="go('log')">
+        <span class="t">Log how I feel</span>
+        <span class="s">A quick anxiety reading + note</span>
+      </button>
+      <button class="door" onclick="startThought()">
+        <span class="t">Work through a thought</span>
+        <span class="s">A gentle CBT thought record</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="log" class="view">
+    <div class="top">
+      <button class="back" onclick="go('checkin')">‹</button>
+      <h2>How are you right now?</h2>
+    </div>
+    <div class="levelnum" id="levelNum">5</div>
+    <div class="levelword" id="levelWord">Manageable</div>
+    <input type="range" id="level" min="0" max="10" value="5" oninput="updateLevel()">
+    <div class="scalerow"><span>Calm</span><span>Overwhelming</span></div>
+    <label class="fld" for="note">Anything you want to note? (optional)</label>
+    <textarea id="note" rows="3" placeholder="What's going on, or what helped…"></textarea>
+    <div class="stack" style="margin-top:auto;">
+      <button class="bigbtn" onclick="saveLog()">Save check-in</button>
+    </div>
+  </section>
+
+  <!-- THOUGHT RECORD -->
+  <section id="thought" class="view">
+    <div class="top">
+      <button class="back" onclick="go('checkin')">‹</button>
+      <h2>Thought record</h2>
+    </div>
+    <div class="progress" id="tProgress"></div>
+    <div class="step">
+      <div class="q" id="tQ"></div>
+      <div class="hint" id="tHint"></div>
+      <textarea id="tInput" rows="4"></textarea>
+    </div>
+    <div class="stack" style="margin-top:auto;">
+      <button class="bigbtn" id="tNext" onclick="nextThought()">Next</button>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="history" class="view">
+    <div class="top">
+      <button class="back" onclick="go('home')">‹</button>
+      <h2>History</h2>
+    </div>
+    <div class="tabs">
+      <button class="tab on" id="tabLogs" onclick="setTab('logs')">Check-ins</button>
+      <button class="tab" id="tabThoughts" onclick="setTab('thoughts')">Thoughts</button>
+    </div>
+    <div id="histBody"></div>
+  </section>
+
+</div>
+
+<!-- CRISIS SHEET -->
+<div class="sheet" id="crisis" onclick="if(event.target===this)closeCrisis()">
+  <div class="sheetcard">
+    <h3>If things feel unbearable</h3>
+    <p>This app can help you ride out a hard moment, but it isn't a substitute for a real person. If you're thinking about harming yourself, please reach out now.</p>
+    <p><b>Samaritans</b> — call <b>116 123</b> (free, 24/7, UK &amp; ROI)<br>
+       <b>Text SHOUT</b> — text <b>85258</b><br>
+       <b>Emergency</b> — call <b>999</b></p>
+    <p style="font-size:13px;color:var(--faint)">Edit these numbers for your region in the file if you're sharing it.</p>
+    <button class="bigbtn ghost" onclick="closeCrisis()">Close</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- storage (works offline when saved; degrades gracefully in preview) --------------- */
+const mem={};
+const store={
+  read(k,f){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):(k in mem?mem[k]:f);}catch(e){return (k in mem)?mem[k]:f;} },
+  write(k,v){ mem[k]=v; try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+};
+
+/* ---------------- view router ---------------- */
+function go(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='breathe'){ currentTech=favTech; setupBreath(); }
+  if(id==='ground') resetGround();
+  if(id==='history') renderHistory();
+}
+
+/* ---------------- breathing ---------------- */
+const techniques={
+  calm:{name:'Long exhale',phases:[{l:'Breathe in',s:4,sc:1},{l:'Breathe out',s:6,sc:.55}]},
+  box:{name:'Box',phases:[{l:'Breathe in',s:4,sc:1},{l:'Hold',s:4,sc:1},{l:'Breathe out',s:4,sc:.55},{l:'Hold',s:4,sc:.55}]},
+  '478':{name:'4·7·8',phases:[{l:'Breathe in',s:4,sc:1},{l:'Hold',s:7,sc:1},{l:'Breathe out',s:8,sc:.55}]},
+  sigh:{name:'Physiological sigh',phases:[{l:'Breathe in',s:3,sc:.9},{l:'Top up',s:1.2,sc:1},{l:'Long breathe out',s:6,sc:.5}]},
+};
+let favTech=store.read('fav','calm');
+let currentTech=favTech, breathTimer=null, breathing=false, phaseIdx=0;
+
+function setupBreath(){
+  const pills=document.getElementById('pills');
+  pills.innerHTML='';
+  Object.keys(techniques).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='pill'+(k===currentTech?' on':'');
+    b.innerHTML=(k===favTech?'<span class="star">\u2605</span> ':'')+techniques[k].name;
+    b.onclick=()=>{ if(breathing)stopBreath(); currentTech=k; setupBreath(); };
+    pills.appendChild(b);
+  });
+  const fav=document.getElementById('favRow');
+  if(currentTech===favTech){
+    fav.innerHTML='<button class="favbtn isfav" disabled>\u2605 Your default</button>';
+  }else{
+    fav.innerHTML='<button class="favbtn" onclick="setFav()">\u2606 Set as default</button>';
+  }
+}
+function setFav(){ favTech=currentTech; store.write('fav',favTech); setupBreath(); }
+function toggleBreath(){ breathing?stopBreath():startBreath(); }
+function startBreath(){
+  breathing=true; phaseIdx=0;
+  document.getElementById('breathToggle').textContent='Stop';
+  runPhase();
+}
+function runPhase(){
+  const ph=techniques[currentTech].phases[phaseIdx];
+  const orb=document.getElementById('orb'), ring=document.getElementById('ring');
+  orb.style.transitionDuration=ph.s+'s';
+  ring.style.transition='transform '+ph.s+'s cubic-bezier(.37,0,.63,1)';
+  orb.style.transform='scale('+ph.sc+')';
+  ring.style.transform='scale('+(0.75+ph.sc*0.45)+')';
+  document.getElementById('cue').textContent=ph.l;
+  breathTimer=setTimeout(()=>{
+    phaseIdx=(phaseIdx+1)%techniques[currentTech].phases.length;
+    runPhase();
+  }, ph.s*1000);
+}
+function stopBreath(){
+  breathing=false; clearTimeout(breathTimer);
+  const t=document.getElementById('breathToggle'); if(t)t.textContent='Begin';
+  const cue=document.getElementById('cue'); if(cue)cue.textContent='Ready';
+  const orb=document.getElementById('orb'); if(orb){orb.style.transitionDuration='1.2s';orb.style.transform='scale(.55)';}
+  const ring=document.getElementById('ring'); if(ring)ring.style.transform='scale(1)';
+}
+
+/* ---------------- grounding ---------------- */
+const gSteps=[
+  {n:5,t:'things you can see'},
+  {n:4,t:'things you can feel'},
+  {n:3,t:'things you can hear'},
+  {n:2,t:'things you can smell'},
+  {n:1,t:'thing you can taste'},
+];
+let gIdx=0;
+function resetGround(){ gIdx=0; drawGround(); }
+function drawGround(){
+  if(gIdx<gSteps.length){
+    document.getElementById('gcount').textContent=gSteps[gIdx].n;
+    document.getElementById('gcount').style.display='';
+    document.getElementById('gtext').textContent=gSteps[gIdx].t;
+    document.getElementById('ghint').textContent='tap when you\u2019ve found them';
+  }else{
+    document.getElementById('gcount').style.display='none';
+    document.getElementById('gtext').innerHTML='<span class="reassure">You\u2019re here. You\u2019re safe. It will pass.</span>';
+    document.getElementById('ghint').textContent='tap to return home';
+  }
+}
+function nextGround(){
+  if(gIdx>=gSteps.length){ go('home'); return; }
+  gIdx++; drawGround();
+}
+
+/* ---------------- log ---------------- */
+const words=['Calm','At ease','Settled','Slightly tense','A bit uneasy','Manageable','Rising','Anxious','High','Very high','Overwhelming'];
+function updateLevel(){
+  const v=+document.getElementById('level').value;
+  document.getElementById('levelNum').textContent=v;
+  document.getElementById('levelWord').textContent=words[v];
+}
+function saveLog(){
+  const logs=store.read('logs',[]);
+  logs.push({t:Date.now(),level:+document.getElementById('level').value,note:document.getElementById('note').value.trim()});
+  store.write('logs',logs);
+  document.getElementById('note').value='';
+  document.getElementById('level').value=5; updateLevel();
+  go('history');
+}
+
+/* ---------------- thought record ---------------- */
+const tSteps=[
+  {q:'What just happened?',h:'The situation, briefly. Where were you, what set it off?'},
+  {q:'What went through your mind?',h:'The thought behind the feeling — the scary or harsh one.'},
+  {q:'What makes that feel true?',h:'The evidence for it, as you see it right now.'},
+  {q:'What might argue against it?',h:'Facts, past experience, what you\u2019d tell a friend.'},
+  {q:'A more balanced way to see it?',h:'Not forced positivity — just something fairer and truer.'},
+];
+let tIdx=0, tAnswers=[];
+function startThought(){ tIdx=0; tAnswers=[]; go('thought'); drawThought(); }
+function drawThought(){
+  const p=document.getElementById('tProgress');
+  p.innerHTML=tSteps.map((_,i)=>'<span class="'+(i<tIdx?'done':'')+'"></span>').join('');
+  document.getElementById('tQ').textContent=tSteps[tIdx].q;
+  document.getElementById('tHint').textContent=tSteps[tIdx].h;
+  const inp=document.getElementById('tInput');
+  inp.value=tAnswers[tIdx]||''; inp.focus();
+  document.getElementById('tNext').textContent=(tIdx===tSteps.length-1)?'Finish':'Next';
+}
+function nextThought(){
+  tAnswers[tIdx]=document.getElementById('tInput').value.trim();
+  if(tIdx<tSteps.length-1){ tIdx++; drawThought(); }
+  else{
+    const th=store.read('thoughts',[]);
+    th.push({t:Date.now(),a:tAnswers.slice()});
+    store.write('thoughts',th);
+    setTab('thoughts'); go('history');
+  }
+}
+
+/* ---------------- history ---------------- */
+let tab='logs';
+function setTab(t){
+  tab=t;
+  document.getElementById('tabLogs').classList.toggle('on',t==='logs');
+  document.getElementById('tabThoughts').classList.toggle('on',t==='thoughts');
+  if(document.getElementById('history').classList.contains('active')) renderHistory();
+}
+function fmt(ts){
+  const d=new Date(ts), now=new Date();
+  const day=d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+  const time=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  return day+' · '+time;
+}
+function renderHistory(){
+  const body=document.getElementById('histBody');
+  if(tab==='logs'){
+    const logs=store.read('logs',[]).slice().reverse();
+    if(!logs.length){ body.innerHTML='<div class="empty">No check-ins yet. When you log how you feel, it\u2019ll show up here — and you\u2019ll start to see your patterns.</div>'; return; }
+    body.innerHTML=trendChart(store.read('logs',[]))+logs.map(l=>`
+      <div class="entry">
+        <div class="meta"><span class="lvl">${l.level}/10 · ${words[l.level]}</span><span class="when">${fmt(l.t)}</span></div>
+        ${l.note?`<div class="note">${esc(l.note)}</div>`:''}
+      </div>`).join('');
+  }else{
+    const th=store.read('thoughts',[]).slice().reverse();
+    if(!th.length){ body.innerHTML='<div class="empty">No thought records yet. Working one through can take the edge off a spiralling thought.</div>'; return; }
+    body.innerHTML=th.map(r=>`
+      <div class="entry">
+        <div class="meta"><span class="tag">Thought record</span><span class="when">${fmt(r.t)}</span></div>
+        <div class="note"><b style="color:var(--ink)">${esc(r.a[0]||'—')}</b></div>
+        ${r.a[4]?`<div class="note" style="margin-top:8px;color:var(--orb)">→ ${esc(r.a[4])}</div>`:''}
+      </div>`).join('');
+  }
+}
+function trendChart(logs){
+  const pts=logs.slice(-30);
+  if(pts.length<2) return '';
+  const W=460,H=110,pad=6;
+  const step=(W-pad*2)/(pts.length-1);
+  const coords=pts.map((l,i)=>[pad+i*step, H-pad-(l.level/10)*(H-pad*2)]);
+  const line=coords.map((c,i)=>(i?'L':'M')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+  const area=line+` L${(pad+(pts.length-1)*step).toFixed(1)} ${H-pad} L${pad} ${H-pad} Z`;
+  return `<div class="chartcard"><div class="cl">Anxiety over your last ${pts.length} check-ins</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="none" style="display:block">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="rgba(116,195,179,.35)"/><stop offset="1" stop-color="rgba(116,195,179,0)"/>
+      </linearGradient></defs>
+      <path d="${area}" fill="url(#g)"/>
+      <path d="${line}" fill="none" stroke="#74c3b3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg></div>`;
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* ---------------- crisis ---------------- */
+function openCrisis(){document.getElementById('crisis').classList.add('open');}
+function closeCrisis(){document.getElementById('crisis').classList.remove('open');}
+
+updateLevel();
+
+/* gentle time-aware greeting on the home screen */
+(function(){
+  const h=new Date().getHours();
+  const g = h<5 ? 'Rest easy.' : h<12 ? 'Good morning.' : h<18 ? 'Good afternoon.' : 'Good evening.';
+  const el=document.getElementById('greeting');
+  if(el) el.textContent = g + ' A quiet place to steady yourself.';
+})();
+
+/* ---------------- PWA: register service worker (needs HTTPS or localhost) ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>
