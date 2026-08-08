@@ -60,7 +60,7 @@
   .brand{margin-top:6px;}
   .brand h1{font-family:var(--serif);font-weight:500;font-size:34px;letter-spacing:.5px;margin:0;}
   .brand p{color:var(--muted);margin:6px 0 0;font-size:15px;}
-  .doors{display:flex;flex-direction:column;gap:16px;width:100%;}
+  .doors{display:flex;flex-direction:column;gap:26px;width:100%;}
   .homemid{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0;}
   .door{
     border:1px solid var(--line);border-radius:22px;padding:26px 24px;text-align:left;
@@ -83,6 +83,8 @@
   .top{display:flex;align-items:center;gap:14px;margin-bottom:8px;min-height:34px;}
   .back{background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:4px 6px;margin-left:-6px;font-family:inherit;}
   .top h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0;flex:1;}
+  .toolbtn{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:inherit;font-size:12px;color:var(--faint);cursor:pointer;transition:.2s;}
+  .toolbtn.on{color:var(--sand);border-color:rgba(217,189,144,.35);}
 
   /* ---------- Breathe ---------- */
   .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:2px 0 6px;}
@@ -97,7 +99,7 @@
   .favbtn:active{color:var(--muted);}
   .favbtn.isfav{color:var(--sand);}
   .orbwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;position:relative;}
-  .stage{position:relative;width:250px;height:250px;display:flex;align-items:center;justify-content:center;}
+  .stage{position:relative;width:250px;height:250px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(116,195,179,.16);transform:scale(1);}
   .orb{
     width:180px;height:180px;border-radius:50%;
@@ -169,6 +171,24 @@
   .center{text-align:center;}
   .reassure{font-family:var(--serif);font-size:22px;text-align:center;line-height:1.4;max-width:18ch;margin:auto;}
 
+  /* ---------- install banner ---------- */
+  .installbar{
+    position:fixed;left:50%;bottom:16px;transform:translateX(-50%) translateY(150%);
+    width:calc(100% - 28px);max-width:492px;z-index:15;
+    background:var(--bg2);border:1px solid var(--line);border-radius:18px;
+    padding:13px 12px 13px 15px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 12px 34px rgba(0,0,0,.45);transition:transform .55s cubic-bezier(.2,.75,.2,1);
+  }
+  .installbar.show{transform:translateX(-50%) translateY(0);}
+  .ib-icon{width:36px;height:36px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 38% 34%,var(--orb),var(--orb-2));box-shadow:0 0 18px var(--orb-glow);}
+  .ib-text{flex:1;font-size:13.5px;line-height:1.4;color:var(--ink);}
+  .ib-text b{color:var(--orb);font-weight:600;}
+  .ib-share{display:inline-block;transform:translateY(2px);}
+  .ib-install{flex:none;background:var(--orb);color:#08221d;border:none;border-radius:12px;
+    padding:10px 15px;font-family:var(--serif);font-size:14px;cursor:pointer;}
+  .ib-x{flex:none;background:none;border:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}
+
   @media (prefers-reduced-motion: reduce){
     .ring{display:none;}
     .view{animation:none;}
@@ -203,6 +223,7 @@
     </div>
     <div class="homefoot">
       <button class="linkbtn" onclick="go('history')">See history</button>
+      <button class="linkbtn" id="installLink" style="display:none" onclick="installFromLink()">Install app</button>
       <button class="linkbtn" onclick="openCrisis()">In crisis?</button>
     </div>
   </section>
@@ -210,29 +231,30 @@
   <!-- BREATHE -->
   <section id="breathe" class="view">
     <div class="top">
-      <button class="back" onclick="stopBreath();go('home')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>Breathe</h2>
+      <button class="toolbtn" id="hapticBtn" onclick="toggleHaptics()" style="display:none">Haptics</button>
     </div>
     <div class="pills" id="pills"></div>
     <div class="favrow" id="favRow"></div>
     <div class="orbwrap">
-      <div class="stage">
+      <div class="stage" onclick="toggleBreath()">
         <div class="ring" id="ring"></div>
         <div class="orb" id="orb"></div>
-        <div class="cue" id="cue">Ready</div>
+        <div class="cue" id="cue">Tap to begin</div>
       </div>
       <div class="subcue" id="subcue">A slow breath out is what calms you.</div>
     </div>
     <div class="stack">
       <button class="bigbtn" id="breathToggle" onclick="toggleBreath()">Begin</button>
-      <button class="bigbtn ghost" onclick="stopBreath();go('ground')">Try grounding instead</button>
+      <button class="bigbtn ghost" onclick="go('ground')">Try grounding instead</button>
     </div>
   </section>
 
   <!-- GROUND -->
   <section id="ground" class="view">
     <div class="top">
-      <button class="back" onclick="go('breathe')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>Grounding</h2>
     </div>
     <div class="ground" id="groundStage" onclick="nextGround()">
@@ -245,7 +267,7 @@
   <!-- CHECK IN (chooser) -->
   <section id="checkin" class="view">
     <div class="top">
-      <button class="back" onclick="go('home')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>Check in</h2>
     </div>
     <div class="doors" style="margin-top:14px;flex:none;">
@@ -263,7 +285,7 @@
   <!-- LOG -->
   <section id="log" class="view">
     <div class="top">
-      <button class="back" onclick="go('checkin')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>How are you right now?</h2>
     </div>
     <div class="levelnum" id="levelNum">5</div>
@@ -280,7 +302,7 @@
   <!-- THOUGHT RECORD -->
   <section id="thought" class="view">
     <div class="top">
-      <button class="back" onclick="go('checkin')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>Thought record</h2>
     </div>
     <div class="progress" id="tProgress"></div>
@@ -297,7 +319,7 @@
   <!-- HISTORY -->
   <section id="history" class="view">
     <div class="top">
-      <button class="back" onclick="go('home')">‹</button>
+      <button class="back" onclick="history.back()">‹</button>
       <h2>History</h2>
     </div>
     <div class="tabs">
@@ -307,6 +329,14 @@
     <div id="histBody"></div>
   </section>
 
+</div>
+
+<!-- INSTALL BANNER -->
+<div class="installbar" id="installBar">
+  <div class="ib-icon" aria-hidden="true"></div>
+  <div class="ib-text" id="ibText">Add <b>Still</b> to your home screen for one-tap, offline access.</div>
+  <button class="ib-install" id="ibInstall" onclick="doInstall()">Install</button>
+  <button class="ib-x" onclick="dismissInstall()" aria-label="Dismiss">×</button>
 </div>
 
 <!-- CRISIS SHEET -->
@@ -330,15 +360,33 @@ const store={
   write(k,v){ mem[k]=v; try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
 };
 
-/* ---------------- view router ---------------- */
-function go(id){
+/* ---------------- view router (history-aware so device Back navigates screens) ---------------- */
+let navStack=['home'], currentView='home', sheetOpen=false;
+
+function showView(id){
+  stopBreath();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const el=document.getElementById(id); if(el) el.classList.add('active');
   window.scrollTo(0,0);
   if(id==='breathe'){ currentTech=favTech; setupBreath(); }
   if(id==='ground') resetGround();
   if(id==='history') renderHistory();
+  currentView=id;
 }
+/* forward navigation — adds a history entry */
+function go(id){ navStack.push(id); history.pushState({i:navStack.length-1},''); showView(id); }
+/* redirect after an action, without leaving the form in the back-stack */
+function goReplace(id){ navStack[navStack.length-1]=id; history.replaceState({i:navStack.length-1},''); showView(id); }
+/* unwind all the way back to home */
+function goHome(){ const n=navStack.length-1; if(n>0) history.go(-n); else showView('home'); }
+
+window.addEventListener('popstate', e=>{
+  if(sheetOpen){ sheetOpen=false; document.getElementById('crisis').classList.remove('open'); return; }
+  const i = (e.state && typeof e.state.i==='number') ? e.state.i : 0;
+  navStack.length = i+1;
+  showView(navStack[i] || 'home');
+});
+history.replaceState({i:0},''); // seed the root (home) entry
 
 /* ---------------- breathing ---------------- */
 const techniques={
@@ -349,6 +397,31 @@ const techniques={
 };
 let favTech=store.read('fav','calm');
 let currentTech=favTech, breathTimer=null, breathing=false, phaseIdx=0;
+
+/* haptics: gentle pulse per phase; unsupported on iOS Safari (degrades silently) */
+const canVibrate = 'vibrate' in navigator;
+let hapticsOn = store.read('haptics', true);
+function vibeFor(label){
+  const l=label.toLowerCase();
+  if(l.includes('out')) return 130;   // exhale — the important one, a fuller pulse
+  if(l.includes('in'))  return 55;    // inhale — soft
+  if(l.includes('hold'))return 20;    // hold — a faint tick
+  return 40;                          // top-up etc
+}
+function buzz(label){ if(hapticsOn && canVibrate){ try{ navigator.vibrate(vibeFor(label)); }catch(e){} } }
+function updateHapticBtn(){
+  const b=document.getElementById('hapticBtn');
+  if(!b) return;
+  b.style.display = canVibrate ? '' : 'none';
+  b.textContent = 'Haptics ' + (hapticsOn ? 'on' : 'off');
+  b.classList.toggle('on', hapticsOn);
+}
+function toggleHaptics(){
+  hapticsOn = !hapticsOn;
+  store.write('haptics', hapticsOn);
+  if(hapticsOn && canVibrate){ try{ navigator.vibrate(40); }catch(e){} } // confirmation tap
+  updateHapticBtn();
+}
 
 function setupBreath(){
   const pills=document.getElementById('pills');
@@ -366,10 +439,10 @@ function setupBreath(){
   }else{
     fav.innerHTML='<button class="favbtn" onclick="setFav()">\u2606 Set as default</button>';
   }
+  updateHapticBtn();
 }
 function setFav(){ favTech=currentTech; store.write('fav',favTech); setupBreath(); }
-function toggleBreath(){ breathing?stopBreath():startBreath(); }
-function startBreath(){
+function toggleBreath(){ breathing?stopBreath():startBreath(); }function startBreath(){
   breathing=true; phaseIdx=0;
   document.getElementById('breathToggle').textContent='Stop';
   runPhase();
@@ -382,6 +455,7 @@ function runPhase(){
   orb.style.transform='scale('+ph.sc+')';
   ring.style.transform='scale('+(0.75+ph.sc*0.45)+')';
   document.getElementById('cue').textContent=ph.l;
+  buzz(ph.l);
   breathTimer=setTimeout(()=>{
     phaseIdx=(phaseIdx+1)%techniques[currentTech].phases.length;
     runPhase();
@@ -389,8 +463,9 @@ function runPhase(){
 }
 function stopBreath(){
   breathing=false; clearTimeout(breathTimer);
+  if(canVibrate){ try{ navigator.vibrate(0); }catch(e){} }
   const t=document.getElementById('breathToggle'); if(t)t.textContent='Begin';
-  const cue=document.getElementById('cue'); if(cue)cue.textContent='Ready';
+  const cue=document.getElementById('cue'); if(cue)cue.textContent='Tap to begin';
   const orb=document.getElementById('orb'); if(orb){orb.style.transitionDuration='1.2s';orb.style.transform='scale(.55)';}
   const ring=document.getElementById('ring'); if(ring)ring.style.transform='scale(1)';
 }
@@ -418,7 +493,7 @@ function drawGround(){
   }
 }
 function nextGround(){
-  if(gIdx>=gSteps.length){ go('home'); return; }
+  if(gIdx>=gSteps.length){ goHome(); return; }
   gIdx++; drawGround();
 }
 
@@ -435,7 +510,7 @@ function saveLog(){
   store.write('logs',logs);
   document.getElementById('note').value='';
   document.getElementById('level').value=5; updateLevel();
-  go('history');
+  goReplace('history');
 }
 
 /* ---------------- thought record ---------------- */
@@ -464,7 +539,7 @@ function nextThought(){
     const th=store.read('thoughts',[]);
     th.push({t:Date.now(),a:tAnswers.slice()});
     store.write('thoughts',th);
-    setTab('thoughts'); go('history');
+    setTab('thoughts'); goReplace('history');
   }
 }
 
@@ -523,8 +598,8 @@ function trendChart(logs){
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
 /* ---------------- crisis ---------------- */
-function openCrisis(){document.getElementById('crisis').classList.add('open');}
-function closeCrisis(){document.getElementById('crisis').classList.remove('open');}
+function openCrisis(){ sheetOpen=true; document.getElementById('crisis').classList.add('open'); history.pushState({sheet:true},''); }
+function closeCrisis(){ if(sheetOpen) history.back(); }
 
 updateLevel();
 
@@ -536,7 +611,59 @@ updateLevel();
   if(el) el.textContent = g + ' A quiet place to steady yourself.';
 })();
 
-/* ---------------- PWA: register service worker (needs HTTPS or localhost) ---------------- */
+/* ---------------- install prompt (platform-aware) ---------------- */
+let deferredPrompt=null;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const inStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+
+function installDismissed(){
+  try{ const t=localStorage.getItem('installDismissed'); return t ? (Date.now()-(+t) < 12096e5) : false; }catch(e){ return false; }
+}
+function showInstallLink(){ const l=document.getElementById('installLink'); if(l) l.style.display=''; }
+function showBar(mode){
+  const bar=document.getElementById('installBar');
+  if(mode==='ios'){
+    document.getElementById('ibInstall').style.display='none';
+    document.getElementById('ibText').innerHTML='Add <b>Still</b> to your Home Screen — tap the <span class="ib-share">Share</span> button, then \u201cAdd to Home Screen.\u201d';
+  }
+  bar.classList.add('show');
+}
+function dismissInstall(){
+  document.getElementById('installBar').classList.remove('show');
+  try{ localStorage.setItem('installDismissed', Date.now()); }catch(e){}
+}
+async function doInstall(){
+  if(!deferredPrompt){ dismissInstall(); return; }
+  deferredPrompt.prompt();
+  try{ await deferredPrompt.userChoice; }catch(e){}
+  deferredPrompt=null;
+  document.getElementById('installBar').classList.remove('show');
+}
+function installFromLink(){
+  if(deferredPrompt) doInstall();
+  else if(isIOS) showBar('ios');
+  else showBar('android');
+}
+
+if(!inStandalone){
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    showInstallLink();
+    if(!installDismissed()) setTimeout(()=>showBar('android'), 1400);
+  });
+  window.addEventListener('appinstalled', ()=>{
+    document.getElementById('installBar').classList.remove('show');
+    const l=document.getElementById('installLink'); if(l) l.style.display='none';
+    deferredPrompt=null;
+  });
+  if(isIOS){
+    showInstallLink();
+    if(!installDismissed()) setTimeout(()=>showBar('ios'), 1600);
+  }
+}
+
+
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }

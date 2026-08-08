@@ -1,5 +1,5 @@
 /* Still — service worker. Bump CACHE when you change any cached file. */
-const CACHE = 'still-v2';
+const CACHE = 'still-v7';
 const ASSETS = [
   './',
   './index.html',
